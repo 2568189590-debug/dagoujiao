@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#fff2dc" />
+<title>大狗答题 — C++/算法练习</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐶</text></svg>" />
+<style>
+  :root {
+    --cream: #fff2dc;
+    --amber: #ffb400;
+    --gray:  #87837e;
+    --coral: #ff5a5f;
+    --teal:  #16c2a3;
+    --blue:  #3e7bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: var(--cream);
+    color: var(--gray);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ---------- 主舞台 ---------- */
+  #stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--cream);
+  }
+  #fx {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* ---------- 大狗角色 ---------- */
+  #dog {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    will-change: transform;
+    transform-origin: 50% 62%;
+  }
+  #dog-inner {
+    position: relative;
+    width: var(--scene-unit, 200px);
+    will-change: transform;
+  }
+  #dog-jelly {
+    position: relative;
+    will-change: transform, filter;
+  }
+  #dog-inner img {
+    width: 100%;
+    display: block;
+    filter: drop-shadow(0 18px 40px rgba(135, 131, 126, .4));
+  }
+  #dog-open {
+    position: absolute;
+    left: 0; top: 0;
+    opacity: 0;
+    transition: opacity .08s linear;
+  }
+  #dog-inner.bark-image #dog-open { opacity: 1; }
+  #dog-inner.is-hajimi #dog-open {
+    visibility: hidden;
+    transition: none;
+  }
+  #dog-inner.is-hajimi.bark-image #dog-close { visibility: hidden; }
+  #dog-inner.is-hajimi.bark-image #dog-open { visibility: visible; }
+
+  /* ---------- 顶部控制 ---------- */
+  #top-controls {
+    position: absolute;
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+    right: max(14px, env(safe-area-inset-right));
+    z-index: 20;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    filter: drop-shadow(0 6px 14px rgba(135, 131, 126, .22));
+    transition: opacity .5s ease, transform .5s cubic-bezier(.2, .8, .2, 1);
+  }
+  #top-controls.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .control-group { display: flex; gap: 8px; }
+
+  /* 几何切角按钮 */
+  .control-button {
+    --btn-edge: rgba(135, 131, 126, .72);
+    --btn-fill: rgba(255, 242, 220, .92);
+    position: relative;
+    min-width: 68px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: var(--gray);
+    background: var(--btn-edge);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px),
+                       calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    font: 700 13px/1 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .2s ease, background .2s ease;
+  }
+  .control-button::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background: var(--btn-fill);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px),
+                       calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    transition: background .2s ease;
+  }
+  .control-button:active { transform: scale(.94); }
+  @media (hover: hover) {
+    .control-button:hover { --btn-edge: rgba(255, 180, 0, .85); }
+  }
+  .control-button svg {
+    width: 20px; height: 20px; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .control-button .mute-slash {
+    opacity: 0; stroke: var(--coral); stroke-width: 2.6;
+    transition: opacity .2s ease;
+  }
+  .control-button.is-muted {
+    --btn-edge: rgba(255, 90, 95, .68);
+    --btn-fill: rgba(255, 255, 255, .94);
+    color: var(--coral);
+  }
+  .control-button.is-muted .mute-slash { opacity: 1; }
+
+  /* ---------- 模式选择 & 遮罩 ---------- */
+  #overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 2.2vmin;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 242, 220, .92);
+    transition: opacity .4s ease, pointer-events 0s .4s;
+    cursor: default;
+  }
+  #overlay.hide { opacity: 0; pointer-events: none; }
+  #overlay .title {
+    font-size: clamp(34px, 8vmin, 72px);
+    font-weight: 900;
+    letter-spacing: .18em;
+    color: var(--amber);
+    margin-bottom: 1vmin;
+  }
+  #overlay .title em { font-style: normal; color: var(--gray); }
+  #overlay .sub {
+    font-size: clamp(13px, 2.4vmin, 18px);
+    letter-spacing: .2em;
+    color: var(--gray);
+    margin-bottom: 4vmin;
+    text-align: center;
+  }
+  #mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* 大按钮 */
+  .big-button {
+    --btn-edge: rgba(255, 180, 0, .85);
+    --btn-fill: rgba(255, 244, 224, .96);
+    position: relative;
+    min-width: 260px;
+    min-height: 60px;
+    padding: 14px 32px;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #b57e00;
+    background: var(--btn-edge);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px),
+                       calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+    font: 700 18px/1.3 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    filter: drop-shadow(0 8px 20px rgba(135, 131, 126, .28));
+    transition: transform .15s ease, filter .2s ease;
+  }
+  .big-button::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    z-index: -1;
+    background: var(--btn-fill);
+    clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px),
+                       calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
+  }
+  .big-button:active { transform: scale(.95); filter: drop-shadow(0 4px 10px rgba(135, 131, 126, .3)); }
+  @media (hover: hover) {
+    .big-button:hover { --btn-edge: rgba(255, 180, 0, 1); filter: drop-shadow(0 10px 24px rgba(255, 180, 0, .35)); }
+  }
+  .big-button .btn-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray);
+    letter-spacing: .06em;
+  }
+
+  /* 倒计时器 */
+  #exam-timer {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #6f6a63;
+    letter-spacing: .04em;
+  }
+  #exam-timer.is-visible { display: flex; }
+  #exam-timer.is-warning { color: var(--coral); animation: timerPulse .8s ease-in-out infinite; }
+  @keyframes timerPulse { 50% { opacity: .5; } }
+  #exam-timer-icon { font-size: 16px; }
+
+  /* ---------- 知识点选择 ---------- */
+  #topic-selector {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 40px 20px;
+    background: rgba(255, 242, 220, .92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+    overflow-y: auto;
+  }
+  #topic-selector.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #topic-selector .topic-title {
+    font-size: clamp(24px, 5vmin, 40px);
+    font-weight: 900;
+    letter-spacing: .14em;
+    color: var(--amber);
+  }
+  .topic-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    max-width: 500px;
+  }
+  .topic-button {
+    --btn-edge: rgba(135, 131, 126, .55);
+    --btn-fill: rgba(255, 255, 255, .65);
+    position: relative;
+    min-width: 100px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: none;
+    color: var(--gray);
+    background: var(--btn-edge);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px),
+                       calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    font: 650 14px/1 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .2s ease, color .2s ease;
+  }
+  .topic-button::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background: var(--btn-fill);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px),
+                       calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+  }
+  .topic-button:active { transform: scale(.95); }
+  @media (hover: hover) {
+    .topic-button:hover { --btn-edge: rgba(255, 180, 0, .78); }
+  }
+  .topic-button.is-active {
+    --btn-edge: rgba(255, 180, 0, .92);
+    --btn-fill: rgba(255, 244, 224, .96);
+    color: #b57e00;
+  }
+  #btn-start-practice {
+    margin-top: 12px;
+  }
+
+  /* ---------- 答题区 ---------- */
+  #quiz-area {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    padding: max(70px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+             max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+    overflow-y: auto;
+  }
+  #quiz-area.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* 进度条 */
+  #quiz-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  #quiz-progress-track {
+    height: 6px;
+    background: rgba(135, 131, 126, .2);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  #quiz-progress-bar {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 999px;
+    transition: width .35s ease;
+  }
+  #quiz-progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(135, 131, 126, .75);
+    letter-spacing: .06em;
+  }
+
+  /* 题目卡片 */
+  #question-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+  #question-topic-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #b57e00;
+    background: rgba(255, 180, 0, .18);
+    border-radius: 999px;
+    letter-spacing: .06em;
+  }
+  #question-text {
+    font-size: clamp(15px, 2.8vmin, 18px);
+    font-weight: 650;
+    line-height: 1.7;
+    color: #6f6a63;
+  }
+
+  /* 代码块 */
+  .code-block {
+    position: relative;
+    background: #2d2a27;
+    border-radius: 10px;
+    padding: 16px;
+    margin: 4px 0;
+    overflow-x: auto;
+    font-family: "Cascadia Code", "Fira Code", "SF Mono", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #e8e4df;
+    white-space: pre;
+    -webkit-overflow-scrolling: touch;
+  }
+  .code-block code { font-family: inherit; }
+
+  /* 选项 */
+  #answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .answer-button {
+    --btn-edge: rgba(135, 131, 126, .48);
+    --btn-fill: rgba(255, 255, 255, .62);
+    position: relative;
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 16px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    color: #6f6a63;
+    background: var(--btn-edge);
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px),
+                       calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+    font: 650 14px/1.45 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .2s ease, transform .12s ease;
+  }
+  .answer-button::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background: var(--btn-fill);
+    clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px),
+                       calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
+    transition: background .2s ease;
+  }
+  .answer-button .answer-key {
+    flex: none;
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--amber);
+    background: rgba(255, 180, 0, .15);
+    border-radius: 50%;
+  }
+  .answer-button:active { transform: scale(.97); }
+  @media (hover: hover) {
+    .answer-button:hover { --btn-edge: rgba(255, 180, 0, .65); }
+  }
+  .answer-button.is-correct {
+    --btn-edge: rgba(22, 194, 163, .75);
+    --btn-fill: rgba(232, 252, 245, .92);
+    color: #0d826e;
+  }
+  .answer-button.is-correct .answer-key { color: var(--teal); background: rgba(22, 194, 163, .2); }
+  .answer-button.is-wrong {
+    --btn-edge: rgba(255, 90, 95, .7);
+    --btn-fill: rgba(255, 238, 238, .92);
+    color: #9e4145;
+  }
+  .answer-button.is-wrong .answer-key { color: var(--coral); background: rgba(255, 90, 95, .18); }
+
+  /* 填空题输入 */
+  #fill-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fill-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: 2px solid rgba(135, 131, 126, .4);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .75);
+    font: 15px/1.4 "Cascadia Code", "Fira Code", "SF Mono", "Consolas", monospace;
+    color: #4f4b46;
+    outline: none;
+    transition: border-color .2s ease;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .fill-input:focus { border-color: var(--amber); }
+  .fill-input.is-correct { border-color: var(--teal); background: rgba(232, 252, 245, .5); }
+  .fill-input.is-wrong { border-color: var(--coral); background: rgba(255, 238, 238, .5); }
+
+  /* ---------- 角色浮现层（答题反馈时升到最前） ---------- */
+  #dog.is-front {
+    z-index: 100 !important;
+    will-change: auto !important;
+  }
+
+  /* ---------- 反馈气泡（从角色上方冒出） ---------- */
+  #feedback-bubble {
+    position: absolute;
+    bottom: 85%;
+    left: 50%;
+    z-index: 110;
+    width: min(380px, 78vw);
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 18px 20px 16px;
+    color: #6f6a63;
+    background: rgba(135, 131, 126, .5);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px),
+                       calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+    filter: drop-shadow(0 14px 32px rgba(80, 76, 71, .35));
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 16px) scale(.92);
+    transition: opacity .28s ease, transform .32s cubic-bezier(.2, .8, .2, 1);
+  }
+  #feedback-bubble::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background: rgba(255, 250, 240, .98);
+    clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px),
+                       calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+  }
+  #feedback-bubble.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0) scale(1);
+  }
+  /* 气泡三角箭头 */
+  #feedback-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid rgba(255, 250, 240, .98);
+  }
+  #feedback-bubble-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  #feedback-bubble-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  #feedback-bubble-text {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    flex: 1;
+  }
+  #feedback-bubble-text.is-correct { color: var(--teal); }
+  #feedback-bubble-text.is-wrong { color: var(--coral); }
+  #feedback-bubble-exp {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.65;
+    color: #6f6a63;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 180, 0, .08);
+    border-radius: 8px;
+    border-left: 3px solid var(--amber);
+    max-height: 24vh;
+    overflow-y: auto;
+    text-align: left;
+  }
+  #feedback-bubble-exp .exp-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--amber);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  #feedback-bubble-next {
+    display: block;
+    margin: 0 auto;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    letter-spacing: .08em;
+    padding: 4px 16px;
+    border: 1px solid rgba(255, 180, 0, .4);
+    border-radius: 999px;
+    background: rgba(255, 244, 224, .6);
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  #feedback-bubble-next:active { background: rgba(255, 180, 0, .2); }
+
+  /* 答错时气泡居中显示（全屏居中，不跟随角色） */
+  #feedback-bubble.is-centered {
+    position: fixed;
+    bottom: auto;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(.92);
+    width: min(440px, 88vw);
+    max-height: 60vh;
+  }
+  #feedback-bubble.is-centered.is-visible {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  #feedback-bubble.is-centered::after { display: none; }
+
+  /* 泡泡自动消失的倒计时指示器 */
+  #feedback-bubble-timer {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(135, 131, 126, .5);
+    letter-spacing: .04em;
+  }
+
+  /* ---------- 结果页 ---------- */
+  #results-area {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: max(70px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+             max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease;
+    overflow-y: auto;
+  }
+  #results-area.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #results-title {
+    font-size: clamp(28px, 6vmin, 48px);
+    font-weight: 900;
+    letter-spacing: .14em;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+  #results-title em { font-style: normal; color: var(--gray); }
+  #results-score {
+    font-size: 20px;
+    font-weight: 700;
+    color: #6f6a63;
+    margin-bottom: 20px;
+  }
+  #review-list {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .review-card {
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, .75);
+    border-left: 4px solid var(--gray);
+  }
+  .review-card.is-correct { border-left-color: var(--teal); }
+  .review-card.is-wrong { border-left-color: var(--coral); }
+  .review-card .review-q {
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.5;
+    color: #4f4b46;
+    margin-bottom: 6px;
+  }
+  .review-card .review-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .review-card .review-meta .correct-ans { color: var(--teal); }
+  .review-card .review-meta .wrong-ans { color: var(--coral); }
+  .review-card .review-exp {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(135, 131, 126, .85);
+  }
+
+  #results-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* ---------- 工具 ---------- */
+  .hidden { display: none !important; }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 430px) {
+    #top-controls {
+      top: max(10px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
+    }
+    .control-button {
+      min-width: 44px;
+      padding-inline: 10px;
+    }
+    .control-button span { display: none; }
+    .big-button { min-width: 220px; min-height: 54px; }
+    #quiz-area { padding-top: max(60px, env(safe-area-inset-top)); }
+    #results-area { padding-top: max(60px, env(safe-area-inset-top)); }
+  }
+
+  /* 减少动画偏好 */
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0s !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <!-- 全屏特效 Canvas -->
+    <canvas id="fx"></canvas>
+
+    <!-- 角色展示 -->
+    <div id="dog">
+      <div id="dog-inner" class="is-hajimi">
+        <div id="dog-jelly">
+          <img id="dog-close" src="Image/maodie_close_mouth.png" alt="大狗" draggable="false" />
+          <img id="dog-open" src="Image/maodie_open_mouth.png" alt="" draggable="false" />
+        </div>
+      </div>
+      <!-- 反馈气泡（从角色上方冒出） -->
+      <div id="feedback-bubble" aria-hidden="true">
+        <div id="feedback-bubble-header">
+          <span id="feedback-bubble-icon"></span>
+          <span id="feedback-bubble-text"></span>
+        </div>
+        <div id="feedback-bubble-exp">
+          <span class="exp-label">解析</span>
+          <span id="feedback-bubble-exp-text"></span>
+        </div>
+        <button id="feedback-bubble-next" type="button"><span id="feedback-bubble-next-label">点击继续</span><span id="feedback-bubble-timer"> · 2s</span></button>
+      </div>
+    </div>
+
+    <!-- 顶部控制 -->
+    <div id="top-controls" class="is-visible" aria-label="声音控制">
+      <div id="audio-controls" class="control-group">
+        <button id="music-toggle" class="control-button" type="button" aria-label="关闭音乐" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 18V5l10-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="16" cy="16" r="3" />
+            <path class="mute-slash" d="M4 3l16 18" />
+          </svg>
+          <span>音乐</span>
+        </button>
+        <button id="sfx-toggle" class="control-button" type="button" aria-label="关闭音效" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 9v6h4l5 4V5L9 9H5z" />
+            <path d="M17 9.5a4 4 0 010 5" />
+            <path class="mute-slash" d="M4 3l16 18" />
+          </svg>
+          <span>音效</span>
+        </button>
+      </div>
+      <button id="btn-back" class="control-button hidden" type="button" aria-label="返回主菜单">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span>返回</span>
+      </button>
+    </div>
+
+    <!-- 模式选择 -->
+    <div id="overlay">
+      <div class="title">大狗<em>答题</em></div>
+      <div class="sub">C++ / 算法 练习系统</div>
+      <div id="mode-buttons">
+        <button id="btn-practice" class="big-button" type="button">
+          练习答题
+          <span class="btn-sub">按知识点分类 · 即时反馈</span>
+        </button>
+        <button id="btn-exam" class="big-button" type="button">
+          模拟考试
+          <span class="btn-sub">自动抽 15选择 + 3阅读 + 2填空 · 2小时 · 跨年混编</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 知识点选择 -->
+    <div id="topic-selector" aria-hidden="true">
+      <div class="topic-title">选择知识点</div>
+      <div id="topic-list" class="topic-list"></div>
+      <button id="btn-start-practice" class="big-button" type="button">开始练习</button>
+      <button id="btn-topic-back" class="control-button" type="button" style="margin-top:8px">返回</button>
+    </div>
+
+    <!-- 答题区域 -->
+    <div id="quiz-area" aria-hidden="true">
+      <div id="quiz-progress">
+        <div id="quiz-progress-track"><div id="quiz-progress-bar"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span id="quiz-progress-text">第 1 / 20 题</span>
+          <span id="exam-timer"><span id="exam-timer-icon">⏱</span><span id="exam-timer-text">2:00:00</span></span>
+        </div>
+      </div>
+      <div id="question-card">
+        <span id="question-topic-tag"></span>
+        <p id="question-text"></p>
+        <div id="code-display" class="hidden"></div>
+        <div id="answer-options"></div>
+        <div id="fill-input-area" class="hidden"></div>
+      </div>
+    </div>
+
+
+    <!-- 考试结果 -->
+    <div id="results-area" aria-hidden="true">
+      <div id="results-title">考试<em>结果</em></div>
+      <div id="results-score"></div>
+      <div id="review-list"></div>
+      <div id="results-actions">
+        <button id="btn-retry" class="big-button" type="button" style="min-width:160px;min-height:48px;">再来一次</button>
+        <button id="btn-results-back" class="control-button" type="button">返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio-data.js?v=20260721-hajimi-new"></script>
+  <script src="question-bank.js"></script>
+  <script src="question-bank-csp2021.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
