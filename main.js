@@ -1181,7 +1181,20 @@ function handleChoiceAnswer(key) {
   const q = selectedQuestions[currentQuestionIndex];
   const isCorrect = q.answer.includes(key);
 
-  // 高亮选项
+  // 考试模式：不显示对错，直接往后走
+  if (quizMode === 'exam') {
+    const buttons = document.querySelectorAll('#answer-options .answer-button');
+    for (const btn of buttons) {
+      const btnKey = btn.querySelector('.answer-key').textContent;
+      if (btnKey === key) btn.style.boxShadow = 'inset 0 0 0 3px var(--amber)';
+      btn.style.pointerEvents = 'none';
+    }
+    userAnswers[currentQuestionIndex] = { questionId: q.id, userAnswer: [key], isCorrect };
+    setTimeout(() => goToNextInExam(), 150);
+    return;
+  }
+
+  // 练习模式：高亮对错
   const buttons = document.querySelectorAll('#answer-options .answer-button');
   for (const btn of buttons) {
     const btnKey = btn.querySelector('.answer-key').textContent;
@@ -1215,16 +1228,22 @@ function handleFillSubmit() {
   const q = selectedQuestions[currentQuestionIndex];
   const isCorrect = q.answer.some(a => a.toLowerCase() === text.toLowerCase());
 
+  userAnswers[currentQuestionIndex] = { questionId: q.id, userAnswer: [text], isCorrect };
+
+  // 考试模式：不显示对错，直接往后
+  if (quizMode === 'exam') {
+    input.style.boxShadow = 'inset 0 0 0 2px var(--amber)';
+    input.disabled = true;
+    const sb = document.getElementById('btn-submit-fill');
+    if (sb) sb.disabled = true;
+    setTimeout(() => goToNextInExam(), 150);
+    return;
+  }
+
   input.classList.add(isCorrect ? 'is-correct' : 'is-wrong');
   input.disabled = true;
   const submitBtn = document.getElementById('btn-submit-fill');
   if (submitBtn) submitBtn.disabled = true;
-
-  userAnswers[currentQuestionIndex] = {
-    questionId: q.id,
-    userAnswer: [text],
-    isCorrect,
-  };
 
   if (isCorrect) {
     handleCorrectAnswer(q);
