@@ -1190,7 +1190,8 @@ function handleChoiceAnswer(key) {
       btn.style.pointerEvents = 'none';
     }
     userAnswers[currentQuestionIndex] = { questionId: q.id, userAnswer: [key], isCorrect };
-    setTimeout(() => goToNextInExam(), 150);
+    clearTimeout(examNavTimer);
+    examNavTimer = setTimeout(() => goToNextInExam(), 150);
     return;
   }
 
@@ -1292,20 +1293,29 @@ function handleWrongAnswer(q) {
   showFeedbackBubble('wrong', q);
 }
 
+let examNavTimer = 0;
+let navigatingExam = false;
+
 /** 考试模式专用：跳过反馈直接进入下一题 */
 function goToNextInExam() {
+  if (navigatingExam) return;
+  navigatingExam = true;
+  clearTimeout(examNavTimer);
   currentQuestionIndex++;
   if (currentQuestionIndex >= selectedQuestions.length) {
+    navigatingExam = false;
     finishQuiz();
   } else {
     displayQuestion(currentQuestionIndex);
+    navigatingExam = false;
   }
 }
 
 /** 返回上一题 */
 function goToPrevQuestion() {
   if (quizState !== QUIZ_STATE.QUESTION) return;
-  if (currentQuestionIndex <= 0) return;
+  if (currentQuestionIndex <= 0 || navigatingExam) return;
+  clearTimeout(examNavTimer);
   currentQuestionIndex--;
   displayQuestion(currentQuestionIndex, true);
 }
@@ -1580,8 +1590,9 @@ document.getElementById('btn-results-back').addEventListener('click', () => show
 document.getElementById('btn-back').addEventListener('click', goBack);
 document.getElementById('btn-prev-question').addEventListener('click', goToPrevQuestion);
 document.getElementById('btn-next-question').addEventListener('click', () => {
-  if (quizState !== QUIZ_STATE.QUESTION) return;
+  if (quizState !== QUIZ_STATE.QUESTION || navigatingExam) return;
   if (currentQuestionIndex >= selectedQuestions.length - 1) return;
+  clearTimeout(examNavTimer);
   currentQuestionIndex++;
   displayQuestion(currentQuestionIndex);
 });
