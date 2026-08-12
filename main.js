@@ -1066,16 +1066,17 @@ function displayQuestion(index, isGoingBack) {
   // 题目文字
   document.getElementById('question-text').textContent = q.question;
 
-  // 代码块：阅读/填空题自动从大题第一题获取代码（id百位相同=同一大题）
+  // 代码块：阅读/填空题自动从同一大题的首题获取代码
   const codeDisplay = document.getElementById('code-display');
   let codeToShow = q.code;
   if (!codeToShow && q.type !== 'choice') {
-    // 自动查找同大题的首题代码
-    const sectionBase = Math.floor(q.id / 100) * 100;
-    const firstInSection = QUESTION_BANK.find(
-      qq => qq.id >= sectionBase && qq.id < sectionBase + 100 && qq.code
-    );
-    if (firstInSection) codeToShow = firstInSection.code;
+    // 通过大题分组精确查找同大题的首题代码
+    const allSections = [...READING_SECTIONS, ...FILL_SECTIONS];
+    const sec = allSections.find(s => s.ids.includes(q.id));
+    if (sec) {
+      const firstQ = QUESTION_BANK.find(qq => sec.ids.includes(qq.id) && qq.code);
+      if (firstQ) codeToShow = firstQ.code;
+    }
   }
   if (codeToShow) {
     codeDisplay.classList.remove('hidden');
