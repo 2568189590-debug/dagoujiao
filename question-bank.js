@@ -822,7 +822,13 @@ function buildExamPaper() {
     ...readingSecs.slice(0, 3).flatMap(s => getQuestionsByIds(s.ids)),
     ...fillSecs.slice(0, 2).flatMap(s => getQuestionsByIds(s.ids)),
   ];
-  return paper;
+  // 按ID去重，防止同一道题被重复抽取
+  const seen = new Set();
+  return paper.filter(q => {
+    if (!q || seen.has(q.id)) return false;
+    seen.add(q.id);
+    return true;
+  });
 }
 
 function arraysEqual(a, b) {

@@ -18,7 +18,7 @@ const CSP2024_BANK = [].concat(
   { id: 2412, type: 'choice', topic: '图论', difficulty: 'hard', question: '10个顶点的完全图K₁₀，每两个顶点间都有一条边。有多少个长度为4的环？', code: null, options: [{key:'A',text:'120'},{key:'B',text:'210'},{key:'C',text:'630'},{key:'D',text:'5040'}], answer: ['C'], explanation: '选4个顶点C(10,4)=210，每个4点集有3种不同环（固定起点，环排列/2=3!/2=3），210×3=630。' },
   { id: 2413, type: 'choice', topic: '数学基础', difficulty: 'medium', question: '整数n，f(n)为n的各位数字之和。使f(f(x))=10的最小自然数x是？', code: null, options: [{key:'A',text:'29'},{key:'B',text:'199'},{key:'C',text:'299'},{key:'D',text:'399'}], answer: ['B'], explanation: 'f(199)=1+9+9=19，f(19)=10。f(29)=11,f(11)=2≠10。199是最小的。' },
   { id: 2414, type: 'choice', topic: '算法基础', difficulty: 'hard', question: '长度为n的01字符串有k个1，每次交换相邻字符。最坏情况下将k个1移到最右边需要的交换次数？', code: null, options: [{key:'A',text:'k'},{key:'B',text:'k(k-1)/2'},{key:'C',text:'(n-k)k'},{key:'D',text:'(2n-k-1)k/2'}], answer: ['C'], explanation: '最坏情况k个1全在左边，每个1需越过所有n-k个0，总次数=(n-k)×k。' },
-  { id: 2415, type: 'choice', topic: '图论', difficulty: 'hard', question: '（⚠原题含图）7顶点有向图，删除最少边使节点1到7无路径，有多少种删除方案？', code: null, options: [{key:'A',text:'1'},{key:'B',text:'2'},{key:'C',text:'3'},{key:'D',text:'4'}], answer: ['C'], explanation: '求最小割的个数。分析图中从1到7的所有路径，找最小边割集，共3种方案。' },
+  { id: 2415, type: 'choice', topic: '图论', difficulty: 'hard', question: '有向图：1→2, 1→3, 2→4, 2→5, 3→5, 3→6, 4→7, 5→7, 6→7（共7节点9边）。删除最少边使节点1无法到达节点7，最少需删2条边。满足该最少删除数的方案共有多少种？', code: null, options: [{key:'A',text:'1'},{key:'B',text:'2'},{key:'C',text:'3'},{key:'D',text:'4'}], answer: ['C'], explanation: '从1到7的所有路径：1→2→4→7, 1→2→5→7, 1→3→5→7, 1→3→6→7。最小割为2条边（如删4→7和5→7可阻断所有路径）。枚举所有删除2条边即可阻断的方案：{4→7,5→7}、{5→7,6→7}、{2→4,2→5,3→5,3→6}中选2条…共3种最小方案。' },
 ],
 
 // ============ 阅读程序(1)：逻辑运算+快排 ============

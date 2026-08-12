@@ -836,9 +836,12 @@
     <div id="quiz-area" aria-hidden="true">
       <div id="quiz-progress">
         <div id="quiz-progress-track"><div id="quiz-progress-bar"></div></div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <span id="quiz-progress-text">第 1 / 20 题</span>
-          <span id="exam-timer"><span id="exam-timer-icon">⏱</span><span id="exam-timer-text">2:00:00</span></span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btn-prev-question" class="control-button" type="button" style="min-width:44px;min-height:32px;padding:4px 10px;font-size:12px;">◀ 上一题</button>
+            <span id="exam-timer"><span id="exam-timer-icon">⏱</span><span id="exam-timer-text">2:00:00</span></span>
+          </div>
         </div>
       </div>
       <div id="question-card">

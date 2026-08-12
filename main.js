@@ -1032,13 +1032,14 @@ function startPracticeWithTopic() {
 }
 
 // ---- 题目展示 ----
-function displayQuestion(index) {
+function displayQuestion(index, isGoingBack) {
   if (index >= selectedQuestions.length) {
     finishQuiz();
     return;
   }
   currentQuestionIndex = index;
   const q = selectedQuestions[index];
+  const prevAnswer = userAnswers[index];
 
   // 进度
   const total = selectedQuestions.length;
@@ -1116,7 +1117,25 @@ function displayQuestion(index) {
       btn.addEventListener('click', () => handleChoiceAnswer(opt.key));
       optionsDiv.appendChild(btn);
     }
+    // 返回上一题时恢复之前的作答状态
+    if (prevAnswer && isGoingBack) {
+      const buttons = document.querySelectorAll('#answer-options .answer-button');
+      for (const btn of buttons) {
+        const btnKey = btn.querySelector('.answer-key').textContent;
+        if (prevAnswer.isCorrect) {
+          if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+        } else {
+          if (btnKey === prevAnswer.userAnswer[0]) btn.classList.add('is-wrong');
+          if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+        }
+        btn.style.pointerEvents = 'none';
+      }
+    }
   }
+
+  // 上一题按钮：第一题时隐藏
+  document.getElementById('btn-prev-question').style.visibility =
+    (currentQuestionIndex === 0) ? 'hidden' : 'visible';
 
   // 滚动到顶部
   quizArea.scrollTop = 0;
@@ -1228,6 +1247,14 @@ function goToNextInExam() {
   } else {
     displayQuestion(currentQuestionIndex);
   }
+}
+
+/** 返回上一题 */
+function goToPrevQuestion() {
+  if (quizState !== QUIZ_STATE.QUESTION) return;
+  if (currentQuestionIndex <= 0) return;
+  currentQuestionIndex--;
+  displayQuestion(currentQuestionIndex, true);
 }
 
 function showFeedbackBubble(result, q) {
@@ -1498,6 +1525,7 @@ document.getElementById('feedback-bubble-next').addEventListener('click', dismis
 document.getElementById('btn-retry').addEventListener('click', enterExamMode);
 document.getElementById('btn-results-back').addEventListener('click', () => showModeSelector());
 document.getElementById('btn-back').addEventListener('click', goBack);
+document.getElementById('btn-prev-question').addEventListener('click', goToPrevQuestion);
 
 musicToggle.addEventListener('click', toggleMusic);
 sfxToggle.addEventListener('click', toggleSoundEffects);
