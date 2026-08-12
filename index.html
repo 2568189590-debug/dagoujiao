@@ -51,17 +51,13 @@
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    will-change: transform;
-    transform-origin: 50% 62%;
   }
   #dog-inner {
     position: relative;
     width: var(--scene-unit, 200px);
-    will-change: transform;
   }
   #dog-jelly {
     position: relative;
-    will-change: transform, filter;
   }
   #dog-inner img {
     width: 100%;
@@ -169,7 +165,7 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 242, 220, .92);
-    transition: opacity .4s ease, pointer-events 0s .4s;
+    transition: opacity .4s ease;
     cursor: default;
   }
   #overlay.hide { opacity: 0; pointer-events: none; }
@@ -201,9 +197,11 @@
     --btn-fill: rgba(255, 244, 224, .96);
     position: relative;
     min-width: 260px;
-    min-height: 60px;
-    padding: 14px 32px;
+    min-height: 64px;
+    padding: 16px 32px;
     border: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -294,9 +292,11 @@
     --btn-fill: rgba(255, 255, 255, .65);
     position: relative;
     min-width: 100px;
-    min-height: 44px;
-    padding: 10px 18px;
+    min-height: 48px;
+    padding: 12px 20px;
     border: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     color: var(--gray);
     background: var(--btn-edge);
     clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px),
@@ -428,9 +428,11 @@
     --btn-fill: rgba(255, 255, 255, .62);
     position: relative;
     width: 100%;
-    min-height: 50px;
-    padding: 12px 16px;
+    min-height: 56px;
+    padding: 14px 16px;
     border: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -864,6 +866,8 @@
   <script src="audio-data.js?v=20260721-hajimi-new"></script>
   <script src="question-bank.js"></script>
   <script src="question-bank-csp2021.js"></script>
+  <script src="question-bank-csp2023.js"></script>
+  <script src="question-bank-csp2022.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
