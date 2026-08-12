@@ -892,6 +892,7 @@ function showModeSelector() {
   userAnswers = [];
   btnBack.classList.add('hidden');
   document.getElementById('btn-prev-question').style.display = 'none';
+  document.getElementById('btn-next-question').style.display = 'none';
 }
 
 function showTopicSelector() {
@@ -908,6 +909,7 @@ function showQuizUI() {
   quizState = QUIZ_STATE.QUESTION;
   btnBack.classList.remove('hidden');
   document.getElementById('btn-prev-question').style.display = 'none';
+  document.getElementById('btn-next-question').style.display = 'inline-block';
 }
 
 function showResultsUI() {
@@ -1106,13 +1108,16 @@ function displayQuestion(index, isGoingBack) {
         const inp = document.getElementById('fill-answer');
         if (inp) {
           inp.value = prevAnswer.userAnswer[0];
-          inp.disabled = true;
-          if (quizMode !== 'exam') {
+          if (quizMode === 'exam') {
+            // 考试模式可修改，不禁用
+            inp.style.boxShadow = 'inset 0 0 0 2px var(--amber)';
+          } else {
+            inp.disabled = true;
             inp.classList.add(prevAnswer.isCorrect ? 'is-correct' : 'is-wrong');
           }
         }
         const btn = document.getElementById('btn-submit-fill');
-        if (btn) btn.disabled = true;
+        if (btn && quizMode !== 'exam') btn.disabled = true;
       }, 150);
     }
     setTimeout(() => {
@@ -1140,28 +1145,31 @@ function displayQuestion(index, isGoingBack) {
       for (const btn of buttons) {
         const btnKey = btn.querySelector('.answer-key').textContent;
         if (quizMode === 'exam') {
-          // 考试模式：只标记已选答案，不显示对错
+          // 考试模式：只标记已选答案（琥珀色边框），不显示对错，允许修改
           if (btnKey === prevAnswer.userAnswer[0]) {
             btn.style.boxShadow = 'inset 0 0 0 3px var(--amber)';
             btn.style.background = 'rgba(255,180,0,.12)';
           }
+          // 考试返回可修改答案，不禁用按钮
         } else {
-          // 练习模式：显示对错
+          // 练习模式：显示对错，锁定不可改
           if (prevAnswer.isCorrect) {
             if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
           } else {
             if (btnKey === prevAnswer.userAnswer[0]) btn.classList.add('is-wrong');
             if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
           }
+          btn.style.pointerEvents = 'none';
         }
-        btn.style.pointerEvents = 'none';
       }
     }
   }
 
-  // 上一题按钮：第一题时隐藏
-  document.getElementById('btn-prev-question').style.display =
-    (currentQuestionIndex === 0) ? 'none' : 'inline-block';
+  // 上一题/下一题按钮
+  const btnPrev = document.getElementById('btn-prev-question');
+  const btnNext = document.getElementById('btn-next-question');
+  btnPrev.style.display = (currentQuestionIndex === 0) ? 'none' : 'inline-block';
+  btnNext.style.display = (currentQuestionIndex >= selectedQuestions.length - 1) ? 'none' : 'inline-block';
 
   // 滚动到顶部
   quizArea.scrollTop = 0;
@@ -1552,6 +1560,12 @@ document.getElementById('btn-retry').addEventListener('click', enterExamMode);
 document.getElementById('btn-results-back').addEventListener('click', () => showModeSelector());
 document.getElementById('btn-back').addEventListener('click', goBack);
 document.getElementById('btn-prev-question').addEventListener('click', goToPrevQuestion);
+document.getElementById('btn-next-question').addEventListener('click', () => {
+  if (quizState !== QUIZ_STATE.QUESTION) return;
+  if (currentQuestionIndex >= selectedQuestions.length - 1) return;
+  currentQuestionIndex++;
+  displayQuestion(currentQuestionIndex);
+});
 
 musicToggle.addEventListener('click', toggleMusic);
 sfxToggle.addEventListener('click', toggleSoundEffects);
