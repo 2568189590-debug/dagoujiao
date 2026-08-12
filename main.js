@@ -1100,10 +1100,25 @@ function displayQuestion(index, isGoingBack) {
     document.getElementById('fill-answer').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') handleFillSubmit();
     });
+    // 返回上一题时恢复之前的填空答案
+    if (prevAnswer && isGoingBack && prevAnswer.userAnswer) {
+      setTimeout(() => {
+        const inp = document.getElementById('fill-answer');
+        if (inp) {
+          inp.value = prevAnswer.userAnswer[0];
+          inp.disabled = true;
+          if (quizMode !== 'exam') {
+            inp.classList.add(prevAnswer.isCorrect ? 'is-correct' : 'is-wrong');
+          }
+        }
+        const btn = document.getElementById('btn-submit-fill');
+        if (btn) btn.disabled = true;
+      }, 150);
+    }
     setTimeout(() => {
       const inp = document.getElementById('fill-answer');
-      if (inp) inp.focus();
-    }, 100);
+      if (inp && !inp.disabled) inp.focus();
+    }, 200);
   } else {
     // 选择/阅读/选项填空：考试模式随机打乱选项顺序
     fillArea.innerHTML = '';
@@ -1124,11 +1139,20 @@ function displayQuestion(index, isGoingBack) {
       const buttons = document.querySelectorAll('#answer-options .answer-button');
       for (const btn of buttons) {
         const btnKey = btn.querySelector('.answer-key').textContent;
-        if (prevAnswer.isCorrect) {
-          if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+        if (quizMode === 'exam') {
+          // 考试模式：只标记已选答案，不显示对错
+          if (btnKey === prevAnswer.userAnswer[0]) {
+            btn.style.boxShadow = 'inset 0 0 0 3px var(--amber)';
+            btn.style.background = 'rgba(255,180,0,.12)';
+          }
         } else {
-          if (btnKey === prevAnswer.userAnswer[0]) btn.classList.add('is-wrong');
-          if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+          // 练习模式：显示对错
+          if (prevAnswer.isCorrect) {
+            if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+          } else {
+            if (btnKey === prevAnswer.userAnswer[0]) btn.classList.add('is-wrong');
+            if (q.answer.includes(btnKey)) btn.classList.add('is-correct');
+          }
         }
         btn.style.pointerEvents = 'none';
       }
