@@ -891,6 +891,7 @@ function showModeSelector() {
   quizMode = null;
   userAnswers = [];
   btnBack.classList.add('hidden');
+  document.getElementById('btn-prev-question').style.display = 'none';
 }
 
 function showTopicSelector() {
@@ -906,6 +907,7 @@ function showQuizUI() {
   quizArea.classList.add('is-visible');
   quizState = QUIZ_STATE.QUESTION;
   btnBack.classList.remove('hidden');
+  document.getElementById('btn-prev-question').style.display = 'none';
 }
 
 function showResultsUI() {
@@ -1134,8 +1136,8 @@ function displayQuestion(index, isGoingBack) {
   }
 
   // 上一题按钮：第一题时隐藏
-  document.getElementById('btn-prev-question').style.visibility =
-    (currentQuestionIndex === 0) ? 'hidden' : 'visible';
+  document.getElementById('btn-prev-question').style.display =
+    (currentQuestionIndex === 0) ? 'none' : 'inline-block';
 
   // 滚动到顶部
   quizArea.scrollTop = 0;
