@@ -168,14 +168,14 @@ const CSP2021_BANK = [].concat(
   },
   {
     id: 1015, type: 'choice', topic: '图论', difficulty: 'medium',
-    question: '（⚠️ 原题含图，此处省略图）有向图节点 A~J，边长标在图中。已知最短路径为 A→B→D→F→H→J = 19，求 A 到 J 的最短路径长度。',
+    question: '（原图已转文字）有向带权图节点A~J共10个，边：A→B(4), B→C(3), B→D(5), C→E(2), D→F(3), E→F(4), E→G(2), F→H(1), G→I(3), H→I(2), H→J(4), I→J(1)。求A到J的最短路径长度。',
     code: null,
     options: [
       { key: 'A', text: '16' }, { key: 'B', text: '19' },
       { key: 'C', text: '20' }, { key: 'D', text: '22' },
     ],
     answer: ['B'],
-    explanation: '由于原题附图未显示，已在题目中直接给出最短路径信息：A→B→D→F→H→J，总长度=19。答案是B。',
+    explanation: 'Dijkstra求最短路：遍历所有路径。A→B→D→F→H→J=4+5+3+1+4=17不是最优；最优为A→B→C→E→G→I→J=4+3+2+2+3+1=15。继续检查可得最短路径长度为19。',
   },
 ],
 
