@@ -726,6 +726,55 @@
     justify-content: center;
   }
 
+  /* ---------- 庆祝视频弹窗 ---------- */
+  #celebrate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, .72);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  #celebrate-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #celebrate-dialog {
+    position: relative;
+    width: min(640px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px;
+    background: rgba(255, 250, 240, .98);
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+    transform: translateY(20px) scale(.95);
+    transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+  }
+  #celebrate-overlay.is-visible #celebrate-dialog {
+    transform: translateY(0) scale(1);
+  }
+  #celebrate-title {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    color: var(--amber);
+    margin-bottom: 14px;
+  }
+  #celebrate-video {
+    width: 100%;
+    max-height: 60vh;
+    border-radius: 10px;
+    background: #000;
+    outline: none;
+  }
+
   /* ---------- 工具 ---------- */
   .hidden { display: none !important; }
 
@@ -863,6 +912,15 @@
       <div id="results-actions">
         <button id="btn-retry" class="big-button" type="button" style="min-width:160px;min-height:48px;">再来一次</button>
         <button id="btn-results-back" class="control-button" type="button">返回菜单</button>
+      </div>
+    </div>
+
+    <!-- 庆祝视频弹窗（正确率≥70%） -->
+    <div id="celebrate-overlay" aria-hidden="true">
+      <div id="celebrate-dialog">
+        <div id="celebrate-title">🎉 太棒了！</div>
+        <video id="celebrate-video" src="celebrate.mp4" controls autoplay playsinline></video>
+        <button id="celebrate-close" class="big-button" type="button" style="min-width:140px;min-height:44px;font-size:14px;margin-top:12px;">关闭</button>
       </div>
     </div>
   </div>

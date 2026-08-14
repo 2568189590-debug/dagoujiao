@@ -1466,6 +1466,11 @@ function showExamResults() {
   document.getElementById('results-score').textContent =
     `得分: ${correct} / ${total} (${percent}%)`;
 
+  // 正确率 ≥70% 弹出庆祝视频
+  if (percent >= 70) {
+    setTimeout(() => showCelebrateVideo(), 600);
+  }
+
   // 渲染逐题回顾
   const reviewList = document.getElementById('review-list');
   reviewList.innerHTML = '';
@@ -1515,6 +1520,24 @@ function goBack() {
     default:
       showModeSelector();
   }
+}
+
+// ---- 庆祝视频 ----
+function showCelebrateVideo() {
+  const overlay = document.getElementById('celebrate-overlay');
+  const video = document.getElementById('celebrate-video');
+  overlay.classList.add('is-visible');
+  overlay.setAttribute('aria-hidden', 'false');
+  video.currentTime = 0;
+  video.play().catch(() => { /* 自动播放被拦截时用户可手动点击播放 */ });
+}
+
+function closeCelebrateVideo() {
+  const overlay = document.getElementById('celebrate-overlay');
+  const video = document.getElementById('celebrate-video');
+  video.pause();
+  overlay.classList.remove('is-visible');
+  overlay.setAttribute('aria-hidden', 'true');
 }
 
 // ---- 工具 ----
@@ -1588,6 +1611,7 @@ document.getElementById('btn-topic-back').addEventListener('click', () => showMo
 document.getElementById('feedback-bubble-next').addEventListener('click', dismissFeedbackAndNext);
 document.getElementById('btn-retry').addEventListener('click', enterExamMode);
 document.getElementById('btn-results-back').addEventListener('click', () => showModeSelector());
+document.getElementById('celebrate-close').addEventListener('click', closeCelebrateVideo);
 document.getElementById('btn-back').addEventListener('click', goBack);
 document.getElementById('btn-prev-question').addEventListener('click', goToPrevQuestion);
 document.getElementById('btn-next-question').addEventListener('click', () => {
