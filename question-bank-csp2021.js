@@ -535,7 +535,62 @@ void build() {
     }
     root = S[1];
 }
-// ... DFS, ST_init, small_init, query ...`,
+}
+void DFS(node *p) {
+    A[p->dfn = t++] = p;
+    for (int i = 0; i < 2; i++)
+        if (p->son[i]) {
+            p->son[i]->dep = p->dep + 1;
+            DFS(p->son[i]);
+            A[t++] = p;
+        }
+    p->end = t - 1;
+}
+node *min(node *x, node *y) { return ③ ? x : y; }
+void ST_init() {
+    b = (int)(ceil(log2(t) / 2));
+    c = t / b;
+    Log2[1] = 0;
+    for (int i = 2; i <= c; i++) Log2[i] = Log2[i >> 1] + 1;
+    for (int i = 0; i < c; i++) {
+        Min[0][i] = A[i * b];
+        for (int j = 1; j < b; j++) Min[0][i] = min(Min[0][i], A[i * b + j]);
+    }
+    for (int i = 1, l = 2; l <= c; i++, l <<= 1)
+        for (int j = 0; j + l <= c; j++)
+            Min[i][j] = min(Min[i - 1][j], Min[i - 1][j + (l >> 1)]);
+}
+void small_init() {
+    for (int i = 0; i <= c; i++)
+        for (int j = 1; j < b && i * b + j < t; j++)
+            if (④) Dif[i] |= 1 << (j - 1);
+    for (int S = 0; S < (1 << (b - 1)); S++) {
+        int mx = 0, v = 0;
+        for (int i = 1; i < b; i++) {
+            ⑤;
+            if (v < mx) { mx = v; Pos[S] = i; }
+        }
+    }
+}
+node *ST_query(int l, int r) {
+    int g = Log2[r - l + 1];
+    return min(Min[g][l], Min[g][r - (1 << g) + 1]);
+}
+node *small_query(int l, int r) {
+    int p = l / b;
+    int S = ⑥;
+    return A[l + Pos[S]];
+}
+node *query(int l, int r) {
+    if (l > r) return query(r, l);
+    int pl = l / b, pr = r / b;
+    if (pl == pr) return small_query(l, r);
+    else {
+        node *s = min(small_query(l, pl * b + b - 1), small_query(pr * b, r));
+        if (pl + 1 <= pr - 1) s = min(s, ST_query(pl + 1, pr - 1));
+        return s;
+    }
+}`,
     options: [
       { key: 'A', text: 'p->son[0]=S[top--]' },
       { key: 'B', text: 'p->son[1]=S[top--]' },
