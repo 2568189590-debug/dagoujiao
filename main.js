@@ -1466,9 +1466,11 @@ function showExamResults() {
   document.getElementById('results-score').textContent =
     `得分: ${correct} / ${total} (${percent}%)`;
 
-  // 正确率 ≥70% 弹出庆祝视频
+  // 正确率 ≥70% 弹出庆祝视频；≤40% 弹出旋转放大图片
   if (percent >= 70) {
     setTimeout(() => showCelebrateVideo(), 600);
+  } else if (percent <= 40) {
+    setTimeout(() => showFailImage(), 600);
   }
 
   // 渲染逐题回顾
@@ -1536,6 +1538,23 @@ function closeCelebrateVideo() {
   const overlay = document.getElementById('celebrate-overlay');
   const video = document.getElementById('celebrate-video');
   video.pause();
+  overlay.classList.remove('is-visible');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function showFailImage() {
+  const overlay = document.getElementById('fail-overlay');
+  const img = document.getElementById('fail-image');
+  overlay.classList.add('is-visible');
+  overlay.setAttribute('aria-hidden', 'false');
+  // 重新触发旋转放大动画
+  img.style.animation = 'none';
+  void img.offsetHeight;
+  img.style.animation = '';
+}
+
+function closeFailImage() {
+  const overlay = document.getElementById('fail-overlay');
   overlay.classList.remove('is-visible');
   overlay.setAttribute('aria-hidden', 'true');
 }
@@ -1612,6 +1631,7 @@ document.getElementById('feedback-bubble-next').addEventListener('click', dismis
 document.getElementById('btn-retry').addEventListener('click', enterExamMode);
 document.getElementById('btn-results-back').addEventListener('click', () => showModeSelector());
 document.getElementById('celebrate-close').addEventListener('click', closeCelebrateVideo);
+document.getElementById('fail-close').addEventListener('click', closeFailImage);
 document.getElementById('btn-back').addEventListener('click', goBack);
 document.getElementById('btn-prev-question').addEventListener('click', goToPrevQuestion);
 document.getElementById('btn-next-question').addEventListener('click', () => {
