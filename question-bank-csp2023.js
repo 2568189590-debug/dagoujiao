@@ -52,15 +52,9 @@ const CSP2023_BANK = [].concat(
 
 // ============ 第一套：完善程序(1) 寻找被移除的元素 ============
 [
-  { id: 4033, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(33)①处应填（）。', code: 'int missingNumber(vector<int>& nums){\n  int left=0,right=nums.size()-1;\n  while(left<right){\n    int mid=left+(right-left)/2;\n    if(nums[mid]==mid+①)left=mid+1;\n    else ②;\n  }\n  return ③;\n}', options: [{key:'A',text:'1'},{key:'B',text:'nums[0]'},{key:'C',text:'right'},{key:'D',text:'left'}], answer: ['B'], explanation: 'nums[mid]==mid+nums[0]判断mid之前是否连续。' },
-  { id: 4034, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(34)②处应填（）。', code: null, options: [{key:'A',text:'left=mid+1'},{key:'B',text:'right=mid-1'},{key:'C',text:'right=mid'},{key:'D',text:'left=mid'}], answer: ['A'], explanation: '不连续时，缺失元素在左侧，left=mid+1缩小范围。' },
-  { id: 4035, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(35)③处应填（）。', code: null, options: [{key:'A',text:'left=mid+1'},{key:'B',text:'right=mid-1'},{key:'C',text:'right=mid'},{key:'D',text:'left=mid'}], answer: ['C'], explanation: '连续时缺失在右侧，right=mid。配合mid=left+(right-left)/2避免死循环。' },
-  { id: 4036, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(36)④处应填（）。', code: null, options: [{key:'A',text:'left+nums[0]'},{key:'B',text:'right+nums[0]'},{key:'C',text:'mid+nums[0]'},{key:'D',text:'right+1'}], answer: ['A'], explanation: '二分结束left==right，返回left+nums[0]即为缺失值。' },
-  { id: 4037, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(37)⑤处应填（）。', code: null, options: [{key:'A',text:'nums[0]+n'},{key:'B',text:'nums[0]+n-1'},{key:'C',text:'nums[0]+n+1'},{key:'D',text:'nums[n-1]'}], answer: ['D'], explanation: '缺失最后一个元素时，二分查找找不到，返回nums[n-1]。' },
-],
-
-// ============ 第一套：完善程序(2) 编辑距离 ============
-[
+  { id: 4033, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(33)①处应填（）。', code: 'int missingNumber(vector<int>& nums){\n  int left=0,right=nums.size()-1;\n  while(left<right){\n    int mid=left+(right-left)/2;\n    if(nums[mid]==mid+①)left=mid+1;\n    else ②;\n  }\n  return ③;\n}', options: [{key:'A',text:'1'},{key:'B',text:'nums[0]'},{key:'C',text:'right'},{key:'D',text:'left'}], answer: ['A'], explanation: '数组从1开始（如[1,2,3,5,6]），正常元素满足nums[mid]==mid+1，故①填1。若数列从任意值起始则用nums[0]。' },
+  { id: 4034, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(34)②处应填（）。', code: null, options: [{key:'A',text:'left=mid+1'},{key:'B',text:'right=mid-1'},{key:'C',text:'right=mid'},{key:'D',text:'left=mid'}], answer: ['C'], explanation: 'nums[mid]!=mid+1说明缺失在mid或mid左侧，右边界收缩到mid（不能mid-1，否则会漏掉mid本身可能缺失的情况），故②填right=mid。' },
+  { id: 4035, type: 'fill', topic: '二分查找', difficulty: 'medium', question: '(35)③处应填（）。', code: null, options: [{key:'A',text:'left+1'},{key:'B',text:'left'},{key:'C',text:'right+nums[0]'},{key:'D',text:'left+nums[0]'}], answer: ['A'], explanation: '循环结束left==right指向缺失位置的下标。因数组从1开始，缺失的数=下标+1，故③填left+1。例：[1,2,3,5,6]中left=3，缺失值=3+1=4。' },
   { id: 4038, type: 'fill', topic: '动态规划', difficulty: 'medium', question: '(38)①处应填（）。', code: 'int editDistance(string str1,string str2){\n  int n=str1.size(),m=str2.size();\n  vector<vector<int>>dp(n+1,vector<int>(m+1));\n  for(int i=0;i<=n;i++)dp[i][0]=i;\n  for(int j=0;j<=m;j++)dp[0][j]=①;\n  for(int i=1;i<=n;i++)\n    for(int j=1;j<=m;j++){\n      if(②)dp[i][j]=③;\n      else dp[i][j]=min({dp[i-1][j],dp[i][j-1],④})+1;\n    }\n  return dp[n][m];\n}', options: [{key:'A',text:'j'},{key:'B',text:'i'},{key:'C',text:'m'},{key:'D',text:'n'}], answer: ['A'], explanation: 'dp[0][j]：空串变j长度需要j次插入，填j。' },
   { id: 4039, type: 'fill', topic: '动态规划', difficulty: 'easy', question: '(39)②处应填（）。', code: null, options: [{key:'A',text:'str1[i-1]==str2[j-1]'},{key:'B',text:'str1[i]==str2[j]'},{key:'C',text:'str1[i-1]!=str2[j-1]'},{key:'D',text:'str1[i]!=str2[j]'}], answer: ['A'], explanation: 'i和j表示长度（1-based），字符串下标从0开始需-1。判断当前字符是否相等。' },
   { id: 4040, type: 'fill', topic: '动态规划', difficulty: 'medium', question: '(40)③处应填（）。', code: null, options: [{key:'A',text:'dp[i-1][j-1]+1'},{key:'B',text:'dp[i-1][j-1]'},{key:'C',text:'dp[i-1][j]'},{key:'D',text:'dp[i][j-1]'}], answer: ['B'], explanation: '末尾字符相等时，不需要操作，直接继承dp[i-1][j-1]。' },
@@ -150,7 +144,7 @@ READING_SECTIONS.push(
   { label: '2023二·第K小差值', ids: [3128,3129,3130,3131,3132,3133], year: '2023' },
 );
 FILL_SECTIONS.push(
-  { label: '2023一·缺失元素', ids: [4033,4034,4035,4036,4037], year: '2023' },
+  { label: '2023一·缺失元素', ids: [4033,4034,4035], year: '2023' },
   { label: '2023一·编辑距离', ids: [4038,4039,4040,4041,4042], year: '2023' },
   { label: '2023二·拓扑K小路径', ids: [4134,4135,4136,4137,4138], year: '2023' },
   { label: '2023二·最大值之和', ids: [4139,4140,4141,4142,4143], year: '2023' },
